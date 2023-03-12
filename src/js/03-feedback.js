@@ -1,38 +1,34 @@
 import throttle from 'lodash.throttle';
- const LOCAL_KEY = 'feedback-form-state';
- 
-let formData = JSON.parse(localStorage.getItem(LOCAL_KEY)) || {};
 
- form = document.querySelector('.feedback-form');
+const LOCALSTORAGE_KEY = 'selectedFilters';
+const formEl = document.querySelector('.feedback-form');
 
- form.addEventListener('input', throttle(storageFormData, 500));
- form.addEventListener('submit', onFormSubmit);
+initForm();
 
-reloadPage();
+formEl.addEventListener('submit', onFormSubmit);
+formEl.addEventListener('input', throttle(onFormInput, 500));
 
- function storageFormData(e) {
-   formData[e.target.name] = e.target.value.trim();
-  localStorage.setItem(LOCAL_KEY, JSON.stringify(formData));
- }
- function onFormSubmit(e) {
-  e.preventDefault();
-      if (refs.input.value === "" || refs.textarea.value === "") {
-          return alert(`Please fill in all the fields!`);
+function onFormSubmit(evt) {
+  evt.preventDefault();
+  const formData = new FormData(formEl);
+  formData.forEach((value, name) => console.log(value, name));
+  evt.currentTarget.reset();
+  localStorage.removeItem(LOCALSTORAGE_KEY);
 }
-or
- const { email, message } = e.currentTarget.elements;
- console.log({ email: email.value, message: message.value });
-or
-  console.log(formData);
-   e.currentTarget.reset();
-   localStorage.removeItem(LOCAL_KEY);
-   formData = {};
- }
 
- function reloadPage() {
-   if (formData) {
-     let { email, message } = form.elements;
-    email.value = formData.email || '';
-    message.value = formData.message || '';
-   }
- }
+function onFormInput(evt) {
+  let persistedFilters = localStorage.getItem(LOCALSTORAGE_KEY);
+  persistedFilters = persistedFilters ? JSON.parse(persistedFilters) : {};
+  persistedFilters[evt.target.name] = evt.target.value;
+  localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(persistedFilters));
+}
+
+function initForm() {
+  let persistedFilters = localStorage.getItem(LOCALSTORAGE_KEY);
+  if (persistedFilters) {
+    persistedFilters = JSON.parse(persistedFilters);
+    Object.entries(persistedFilters).forEach(([name, value]) => {
+      formEl.elements[name].value = value;
+    });
+  }
+}
