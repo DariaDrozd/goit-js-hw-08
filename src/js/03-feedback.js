@@ -1,34 +1,40 @@
 import throttle from 'lodash.throttle';
 
-const LOCALSTORAGE_KEY = 'selectedFilters';
-const formEl = document.querySelector('.feedback-form');
 
-initForm();
+const LOCAL_KEY = 'feedback-form-state';
 
-formEl.addEventListener('submit', onFormSubmit);
-formEl.addEventListener('input', throttle(onFormInput, 500));
+form = document.querySelector('.feedback-form');
 
-function onFormSubmit(evt) {
-  evt.preventDefault();
-  const formData = new FormData(formEl);
-  formData.forEach((value, name) => console.log(value, name));
-  evt.currentTarget.reset();
-  localStorage.removeItem(LOCALSTORAGE_KEY);
+form.addEventListener('input', throttle(onInputData, 500));
+form.addEventListener('submit', onFormSubmit);
+
+let dataForm = JSON.parse(localStorage.getItem(LOCAL_KEY)) || {};
+const { email, message } = form.elements;
+reloadPage();
+
+function onInputData(e) {
+  const { name, value } = e.target;
+  dataForm = { ...dataForm, [name]: { value } };
+  localStorage.setItem(LOCAL_KEY, JSON.stringify(dataForm));
 }
 
-function onFormInput(evt) {
-  let persistedFilters = localStorage.getItem(LOCALSTORAGE_KEY);
-  persistedFilters = persistedFilters ? JSON.parse(persistedFilters) : {};
-  persistedFilters[evt.target.name] = evt.target.value;
-  localStorage.setItem(LOCALSTORAGE_KEY, JSON.stringify(persistedFilters));
-}
-
-function initForm() {
-  let persistedFilters = localStorage.getItem(LOCALSTORAGE_KEY);
-  if (persistedFilters) {
-    persistedFilters = JSON.parse(persistedFilters);
-    Object.entries(persistedFilters).forEach(([name, value]) => {
-      formEl.elements[name].value = value;
-    });
+function reloadPage() {
+  if (dataForm) {
+    email.value = dataForm.email || '';
+    message.value = dataForm.message || '';
   }
 }
+
+function onFormSubmit(e) {
+  e.preventDefault();
+  console.log({ email: email.value, message: message.value });
+
+  if (email.value === '' || message.value === '') {
+    return alert('Please fill in all the fields!');
+  }
+
+  localStorage.removeItem(LOCAL_KEY);
+  e.currentTarget.reset();
+  dataForm = {};
+}
+
