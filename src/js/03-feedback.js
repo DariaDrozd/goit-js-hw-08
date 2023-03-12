@@ -1,46 +1,38 @@
 import throttle from 'lodash.throttle';
-
  const LOCAL_KEY = 'feedback-form-state';
- let formData = {};
+ 
+let formData = JSON.parse(localStorage.getItem(LOCAL_KEY)) || {};
 
- const refs = {
- form: document.querySelector('.feedback-form'),
-  input: document.querySelector('.feedback-form  input'),
-   textarea: document.querySelector('.feedback-form textarea'),
- };
+ form = document.querySelector('.feedback-form');
 
- refs.form.addEventListener('input', throttle(onInputData, 500));
-refs.form.addEventListener('submit', onFormSubmit);
+ form.addEventListener('input', throttle(storageFormData, 500));
+ form.addEventListener('submit', onFormSubmit);
 
- populateFeedbackForm();
+reloadPage();
 
- function onInputData(e) {
-   formData = {
-     email: refs.input.value.trim(),
-    message: refs.textarea.value.trim(),
-   };
-   //formData[e.target.name] = e.target.value.trim(); // виводить в localStorage лише один ключ з значенням, якщо інший не заповнений
-   localStorage.setItem(LOCAL_KEY, JSON.stringify(formData));
+ function storageFormData(e) {
+   formData[e.target.name] = e.target.value.trim();
+  localStorage.setItem(LOCAL_KEY, JSON.stringify(formData));
  }
-
  function onFormSubmit(e) {
   e.preventDefault();
-const { email, message } = e.currentTarget.elements;
-console.log({ email: email.value.trim(), message: message.value.trim() });
-
-   if (localStorage.getItem(LOCAL_KEY)) {
-      let data = JSON.parse(localStorage.getItem(LOCAL_KEY));
-      console.log(data);
-     localStorage.removeItem(LOCAL_KEY);
-   }
+      if (refs.input.value === "" || refs.textarea.value === "") {
+          return alert(`Please fill in all the fields!`);
+}
+or
+ const { email, message } = e.currentTarget.elements;
+ console.log({ email: email.value, message: message.value });
+or
+  console.log(formData);
    e.currentTarget.reset();
+   localStorage.removeItem(LOCAL_KEY);
    formData = {};
  }
 
- function populateFeedbackForm() {
-   let data = localStorage.getItem(LOCAL_KEY);
-   if (!data) return;
-   formData = JSON.parse(data);
-   refs.input.value = formData.email ?? '';
-   refs.textarea.value = formData.message ?? '';
+ function reloadPage() {
+   if (formData) {
+     let { email, message } = form.elements;
+    email.value = formData.email || '';
+    message.value = formData.message || '';
+   }
  }
